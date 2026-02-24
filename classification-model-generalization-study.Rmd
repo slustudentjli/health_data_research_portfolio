@@ -1,0 +1,349 @@
+
+---
+title: "5330_Assignment 2"
+output:
+  pdf_document: default
+  html_document: default
+date: "2026-02-19"
+
+
+
+CH7
+```{r}
+# --------------------------------------------------
+# Question 1
+# Load required packages and dataset
+# --------------------------------------------------
+
+library(tidyverse)
+
+# Load the GSS dataset
+load("/Users/Lcc/gss2018.rda")
+
+# View object names
+ls()
+
+```
+
+```{r}
+# --------------------------------------------------
+# Question 2
+# Select only USETECH and MARITAL variables
+# --------------------------------------------------
+
+data <- GSS %>%
+  select(USETECH, MARITAL)
+
+# Check structure
+str(data)
+
+```
+
+```{r}
+# --------------------------------------------------
+# Question 3
+# Clean USETECH variable
+# Convert -1, 998, and 999 to NA
+# --------------------------------------------------
+
+data <- data %>%
+  mutate(
+    USETECH = na_if(USETECH, -1),
+    USETECH = na_if(USETECH, 998),
+    USETECH = na_if(USETECH, 999)
+  )
+
+summary(data$USETECH)
+
+```
+Interpretation:
+These invalid codes are now treated as missing values.
+
+```{r}
+# --------------------------------------------------
+# Question 4
+# Clean MARITAL variable
+# Convert 9 to NA and label categories
+# --------------------------------------------------
+
+data <- data %>%
+  mutate(
+    MARITAL = na_if(MARITAL, 9),
+    MARITAL = factor(
+      MARITAL,
+      levels = c(1, 2, 3, 4, 5),
+      labels = c(
+        "Married",
+        "Widowed",
+        "Divorced",
+        "Separated",
+        "Never married"
+      )
+    )
+  )
+
+str(data$MARITAL)
+table(data$MARITAL, useNA = "ifany")
+
+```
+Interpretation:
+MARITAL is now a categorical factor variable.
+
+```{r}
+# --------------------------------------------------
+# Question 5
+# Exploratory Data Analysis
+# Examine distribution of variables
+# --------------------------------------------------
+
+summary(data$USETECH)
+table(data$MARITAL)
+
+```
+Interpretation:
+This shows the distribution of technology use and marital categories.
+
+```{r}
+# --------------------------------------------------
+# Question 6
+# Visualize technology use by marital status
+# --------------------------------------------------
+
+ggplot(data, aes(x = MARITAL, y = USETECH)) +
+  geom_boxplot() +
+  labs(
+    title = "Technology Use by Marital Status",
+    x = "Marital Status",
+    y = "Technology Use"
+  )
+
+```
+Interpretation:
+The boxplot allows comparison of medians and spread across groups.
+
+```{r}
+# --------------------------------------------------
+# Question 7
+# Calculate mean and standard deviation
+# Drop NA values before calculation
+# --------------------------------------------------
+
+descriptives <- data %>%
+  drop_na(USETECH, MARITAL) %>%
+  group_by(MARITAL) %>%
+  summarize(
+    mean_use = mean(USETECH),
+    sd_use = sd(USETECH)
+  )
+
+descriptives
+
+```
+Interpretation:
+This shows average technology use and variability by marital group.
+
+```{r}
+# --------------------------------------------------
+# Question 8
+# Conduct one-way ANOVA
+# Test whether technology use differs by marital status
+# --------------------------------------------------
+
+anova_data <- data %>%
+  drop_na(USETECH, MARITAL)
+
+anova_model <- aov(USETECH ~ MARITAL, data = anova_data)
+
+summary(anova_model)
+```
+``Interpretation:
+If p < .05, there is a significant difference in technology use across marital groups.`
+
+```{r}
+# --------------------------------------------------
+# Question 9
+# Perform Tukey post-hoc test
+# Identify which groups differ
+# --------------------------------------------------
+
+TukeyHSD(anova_model)
+
+```
+Interpretation:
+Significant pairwise comparisons indicate which marital groups differ in technology use.
+
+
+
+
+CH 8
+
+```{r}
+# --------------------------------------------------
+# Question 1
+# Load required packages and Chapter 8 dataset
+# --------------------------------------------------
+
+library(tidyverse)
+
+data_ch8 <- read.csv("/Users/Lcc/water_educ_2015_who_unesco_ch8.csv")
+
+str(data_ch8)
+
+
+```
+
+```{r}
+# --------------------------------------------------
+# Question 2
+# Select variables for analysis:
+# male.in.school, female.in.school, perc.basic2015water
+# --------------------------------------------------
+
+data_ch8 <- data_ch8 %>%
+  select(male.in.school, female.in.school, perc.basic2015water)
+
+summary(data_ch8)
+
+```
+
+```{r}
+# --------------------------------------------------
+# Question 3
+# Examine distribution of male.in.school
+# --------------------------------------------------
+
+summary(data_ch8$male.in.school)
+
+ggplot(data_ch8, aes(x = male.in.school)) +
+  geom_histogram(bins = 20)
+
+```
+Interpretation:
+This shows the distribution of male school enrollment across countries. The histogram allows us to examine skewness and overall spread.
+
+```{r}
+# --------------------------------------------------
+# Question 4
+# Examine distribution of female.in.school
+# --------------------------------------------------
+
+summary(data_ch8$female.in.school)
+
+ggplot(data_ch8, aes(x = female.in.school)) +
+  geom_histogram(bins = 20)
+
+```
+Interpretation:
+This shows how female school enrollment is distributed across countries and whether the variable appears normally distributed.
+
+```{r}
+# --------------------------------------------------
+# Question 5
+# Examine distribution of perc.basic2015water
+# --------------------------------------------------
+
+summary(data_ch8$perc.basic2015water)
+
+ggplot(data_ch8, aes(x = perc.basic2015water)) +
+  geom_histogram(bins = 20)
+
+```
+Interpretation:
+This histogram shows the distribution of access to basic water services across countries.
+
+
+```{r}
+# --------------------------------------------------
+# Question 8 (Assumption Check)
+# Scatterplot: male.in.school vs female.in.school
+# --------------------------------------------------
+
+ggplot(data_ch8, aes(x = male.in.school, y = female.in.school)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+```
+Interpretation:
+The scatterplot allows us to assess linearity. If the relationship appears roughly linear, regression assumptions may be met.
+
+```{r}
+# --------------------------------------------------
+# Question 6
+# Linear regression: female.in.school ~ male.in.school
+# --------------------------------------------------
+
+model1 <- lm(female.in.school ~ male.in.school, data = data_ch8)
+
+summary(model1)
+
+```
+Interpretation:
+If p < 0.05, male enrollment significantly predicts female enrollment. The R-squared indicates how much variation in female enrollment is explained by male enrollment.
+
+```{r}
+# --------------------------------------------------
+# Residual diagnostics
+# --------------------------------------------------
+
+plot(model1)
+
+```
+Interpretation:
+Residual plots help assess normality and homoscedasticity. If assumptions are reasonably satisfied, linear regression is appropriate.
+
+```{r}
+# --------------------------------------------------
+# Question 8 (Assumption Check for second pair)
+# Scatterplot: male.in.school vs perc.basic2015water
+# --------------------------------------------------
+
+ggplot(data_ch8, aes(x = male.in.school, y = perc.basic2015water)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+```
+Interpretation:
+This plot helps assess whether access to water is linearly related to male school enrollment.
+
+```{r}
+# --------------------------------------------------
+# Question 6
+# Linear regression: perc.basic2015water ~ male.in.school
+# --------------------------------------------------
+
+model2 <- lm(perc.basic2015water ~ male.in.school, data = data_ch8)
+
+summary(model2)
+
+```
+Interpretation:
+If p < 0.05, male school enrollment significantly predicts access to water. The strength of association is indicated by R-squared.
+
+```{r}
+# --------------------------------------------------
+# Residual diagnostics
+# --------------------------------------------------
+
+plot(model2)
+
+```
+Interpretation:
+If residuals appear randomly distributed, regression assumptions are reasonably met. If not, a nonparametric approach (Spearman correlation) may be more appropriate.
+
+```{r}
+# --------------------------------------------------
+# Question 9
+# Nonparametric alternative (Spearman correlation)
+# --------------------------------------------------
+
+cor.test(data_ch8$male.in.school,
+         data_ch8$female.in.school,
+         method = "spearman")
+
+cor.test(data_ch8$male.in.school,
+         data_ch8$perc.basic2015water,
+         method = "spearman")
+
+```
+Interpretation:
+If assumptions are violated, Spearman correlation evaluates monotonic relationships without requiring normality.
