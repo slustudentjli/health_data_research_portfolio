@@ -1,0 +1,69 @@
+---
+title: "Untitled"
+output:
+  pdf_document: default
+  html_document: default
+date: "2026-02-16"
+---
+
+```{r}
+library(MASS)
+library(purrr)
+
+source("/Users/Lcc/Desktop/5330-02-mechine learning/week-5/part-a-automate-best-subsets.R")
+
+exists("get_kfold_cv_rmse")
+```
+
+```{r}
+dobj <- as.data.frame(Boston)
+dobj$chas <- as.factor(dobj$chas)
+
+outcome.var <- "medv"
+predictors <- setdiff(names(dobj), outcome.var)
+length(predictors)  
+head(dobj)
+
+
+```
+
+```{r}
+find_best_k <- function(k, numfolds = 10) {
+  comb_mat <- combn(predictors, k)
+  combo_strs <- map_chr(1:ncol(comb_mat), \(i) paste(comb_mat[, i], collapse = "+"))
+
+  rmses <- map_dbl(combo_strs, \(s) get_kfold_cv_rmse(
+    pred.combo = s,
+    dataset.obj = dobj,
+    outcome = outcome.var,
+    numfolds = numfolds))
+
+  best_idx <- which.min(rmses)
+
+  data.frame ( 
+    No_of_predictors = k,
+    Best_combinations = combo_strs[best_idx],
+    RMSE = rmses[best_idx])}
+
+test_out <- do.call(rbind, lapply(1:2, find_best_k))
+test_out
+
+```
+
+```{r}
+results_partA <- do.call(rbind, lapply(1:13, find_best_k))
+results_partA
+
+```
+
+```{r}
+knitr::kable(
+  results_partA,
+  digits = 4,
+  col.names = c("No. of predictors", "Best combinations", "RMSE"),
+  align = c("c", "l", "r"))
+
+```
+
+
+
